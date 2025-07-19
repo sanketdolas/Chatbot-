@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>E-commerce Chatbot</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #121212;
+    }
+
+    .chat-btn {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: #00f2ff;
+      color: #121212;
+      border: none;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      font-size: 28px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 242, 255, 0.5);
+      transition: transform 0.2s ease;
+    }
+
+    .chat-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .chat-window {
+      position: fixed;
+      bottom: 100px;
+      right: 30px;
+      width: 320px;
+      max-height: 500px;
+      background: #1e1e1e;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid #00f2ff;
+    }
+
+    .chat-header {
+      background: #00f2ff;
+      color: #121212;
+      padding: 10px;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      color: #fff;
+    }
+
+    .chat-input {
+      display: flex;
+      border-top: 1px solid #333;
+    }
+
+    .chat-input input {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      outline: none;
+      background: #222;
+      color: #fff;
+    }
+
+    .chat-input button {
+      background: #00f2ff;
+      border: none;
+      padding: 10px 15px;
+      cursor: pointer;
+      color: #121212;
+      font-weight: bold;
+    }
+
+    .message {
+      margin: 5px 0;
+    }
+
+    .user {
+      text-align: right;
+      color: #00f2ff;
+    }
+
+    .bot {
+      text-align: left;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Chat Button -->
+  <button class="chat-btn" onclick="toggleChat()">💬</button>
+
+  <!-- Chat Window -->
+  <div class="chat-window" id="chatWindow">
+    <div class="chat-header">Support Chat</div>
+    <div class="chat-messages" id="chatMessages">
+      <div class="message bot">Hello 👋 How can I help you today? Ask me anything from shipping to offers!</div>
+    </div>
+    <div class="chat-input">
+      <input type="text" id="userInput" placeholder="Type your question..." onkeypress="checkEnter(event)" />
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <script>
+    const faq = {
+      "what are your shipping options": "We offer standard, express, and same-day delivery in select locations.",
+      "how long does shipping take": "Shipping usually takes 3-5 business days depending on your location.",
+      "do you offer free shipping": "Yes, free shipping is available on orders above ₹999.",
+      "how can i track my order": "Once shipped, you will receive an email with tracking details.",
+      "what is your return policy": "We have a 7-day easy return policy for most products.",
+      "how do i initiate a return": "Go to My Orders, select the item, and click on Return to initiate.",
+      "do you offer cash on delivery": "Yes, COD is available on orders up to ₹10,000.",
+      "what payment methods do you accept": "We accept UPI, debit/credit cards, net banking, wallets, and COD.",
+      "can i cancel my order": "Yes, you can cancel before it is shipped from our warehouse.",
+      "how do i cancel my order": "Go to My Orders, select the order, and click Cancel Order.",
+      "where is my order": "Please share your order ID to check the status.",
+      "do you have a physical store": "Currently, we are online-only but plan to open stores soon.",
+      "how can i contact customer support": "You can chat here or email us at support@ecommerce.com.",
+      "are there any ongoing offers": "Yes, check our homepage for live discounts and deals.",
+      "how to apply discount coupon": "Add products to cart, proceed to checkout, and apply the coupon code.",
+      "why was my payment declined": "This can happen due to bank issues. Try another payment method.",
+      "can i change delivery address": "If not shipped yet, you can update it in My Orders.",
+      "do you deliver to my pincode": "Please share your pincode and I will check instantly.",
+      "is there warranty on products": "Yes, most products have manufacturer warranty as mentioned on the page.",
+      "how do i use wallet balance": "Select wallet as payment method during checkout.",
+      "how to redeem gift card": "Enter gift card code at checkout to redeem its value.",
+      "do you have loyalty points": "Yes, our rewards program gives you points on every order.",
+      "how can i check my loyalty points": "Go to My Account > Rewards to check your points balance.",
+      "how to create an account": "Click Sign Up on top-right and fill in your details.",
+      "i forgot my password": "Click Forgot Password on login page to reset it.",
+      "how to change my password": "Go to My Account > Settings > Change Password.",
+      "do you ship internationally": "Currently, we ship only within India.",
+      "how can i become a seller": "Visit our Sell With Us page to register as a seller.",
+      "do you offer bulk purchase discount": "Yes, please contact support for bulk orders and quotes.",
+      "can i pre-order products": "Pre-orders are available for select upcoming products.",
+      "what happens if i miss delivery": "Courier will attempt twice or you can reschedule via tracking link.",
+      "is my payment information secure": "Absolutely. We use SSL encryption for all transactions.",
+      "do you offer emi options": "Yes, EMI is available on orders above ₹3000 via select banks.",
+      "how can i write a product review": "Go to product page and click Write a Review.",
+      "why is my order delayed": "Sometimes due to high demand or logistics issues. We apologise for the delay.",
+      "can i change my phone number": "Yes, in My Account > Profile section.",
+      "how to unsubscribe from emails": "Click Unsubscribe at the bottom of any marketing email.",
+      "do you offer gift wrapping": "Yes, gift wrapping is available at checkout for a small fee.",
+      "how to use refer and earn": "Share your referral code with friends. You both earn rewards on their first order.",
+      "where can i find size guide": "Size guides are available on every product page under Size Chart.",
+      "do you have customer care number": "Yes, call us at +91-9876543210 between 9am-7pm IST.",
+      "how can i edit my order": "Currently, orders cannot be edited once placed. You can cancel and re-order.",
+      "why was my order cancelled": "It may be due to stock unavailability or payment issues. Check your email for details.",
+      "can i pay using paylater apps": "Yes, PayLater options like Simpl and LazyPay are available at checkout.",
+      "how to add multiple addresses": "Go to My Account > Address Book to add and manage addresses.",
+      "do you have mobile app": "Yes, download our app from Play Store or App Store for best deals.",
+      "how do i know if my order is confirmed": "You will receive a confirmation email and SMS after placing your order.",
+      "what if i receive damaged product": "We apologise. Please initiate return immediately with photo proof.",
+      "how to contact seller directly": "Currently, all seller communication goes through our support team.",
+      "can i request specific delivery time": "We cannot guarantee specific times but you can mention it in delivery instructions."
+    };
+
+    function toggleChat() {
+      const chatWindow = document.getElementById('chatWindow');
+      chatWindow.style.display = (chatWindow.style.display === 'flex') ? 'none' : 'flex';
+    }
+
+    function sendMessage() {
+      const input = document.getElementById('userInput');
+      const messages = document.getElementById('chatMessages');
+      const userMsg = input.value.trim().toLowerCase();
+      if (userMsg === '') return;
+
+      const userDiv = document.createElement('div');
+      userDiv.classList.add('message', 'user');
+      userDiv.textContent = input.value;
+      messages.appendChild(userDiv);
+
+      const botDiv = document.createElement('div');
+      botDiv.classList.add('message', 'bot');
+      if (faq[userMsg]) {
+        botDiv.textContent = faq[userMsg];
+      } else {
+        botDiv.textContent = "Sorry, I didn't understand that. Please rephrase or contact support.";
+      }
+      messages.appendChild(botDiv);
+
+      messages.scrollTop = messages.scrollHeight;
+      input.value = '';
+    }
+
+    function checkEnter(event) {
+      if (event.key === "Enter") {
+        sendMessage();
+      }
+    }
+  </script>
+</body>
+</html>
